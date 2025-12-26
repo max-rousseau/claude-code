@@ -1,0 +1,132 @@
+# =============================================================================
+# BUILD SYSTEM
+# =============================================================================
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+# =============================================================================
+# PROJECT METADATA
+# =============================================================================
+
+[project]
+name = "project-name"
+version = "0.1.0"
+description = "Brief project description"
+readme = "README.md"
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    # Production dependencies with ~= version matching
+    # "requests~=2.32.0",
+]
+requires-python = "~=3.13"
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest~=8.3.0",
+    "pytest-asyncio~=0.24.0",
+    "pytest-cov~=6.0.0",
+    "pytest-xdist~=3.5.0",
+    "pytest-mock~=3.14.0",
+    "pytest-timeout~=2.4.0",
+    # Code quality
+    "black~=24.12.0",
+    "flake8~=7.1.0",
+    "flake8-pyproject~=1.2.0",
+    "bandit[toml]~=1.8.0",
+    "vulture~=2.14",
+    # Build tools
+    "pip~=25.0",
+]
+
+[project.scripts]
+# CLI entry points
+project-name = "project_name.cli:main"
+
+# =============================================================================
+# CODE QUALITY TOOLS
+# =============================================================================
+
+[tool.black]
+line-length = 88
+target-version = ["py310", "py311", "py312"]
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503", "E501"]
+exclude = [".venv", ".git", "__pycache__", "build", "dist"]
+per-file-ignores = [
+    "__init__.py:F401",
+]
+
+[tool.bandit]
+exclude_dirs = [".venv", "tests"]
+skips = ["B101"]
+
+[tool.vulture]
+exclude = [".venv/", "tests/"]
+min_confidence = 80
+
+# =============================================================================
+# TESTING
+# =============================================================================
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+python_classes = "Test*"
+timeout = 30
+timeout_method = "thread"
+addopts = [
+    "--verbose",
+    "--tb=short",
+    "--strict-markers",
+    "--disable-warnings",
+    "--cov=src/project_name",
+    "--cov-report=html:htmlcov",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--cov-fail-under=85",
+]
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "slow: Slow tests",
+    "critical: Critical functionality tests",
+]
+
+[tool.coverage.run]
+source = ["src/project_name"]
+branch = true
+omit = [
+    "src/project_name/__main__.py",
+    "src/project_name/main.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]

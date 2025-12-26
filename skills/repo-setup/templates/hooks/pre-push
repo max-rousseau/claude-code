@@ -1,0 +1,30 @@
+#!/bin/bash
+# Pre-push hook: thorough checks run before pushing
+# Tools read configuration from pyproject.toml
+
+set -e
+
+echo "=== PRE-PUSH CHECKS ==="
+
+# Security scan
+echo "Running bandit security scan..."
+bandit -r src/ -c pyproject.toml || {
+    echo "ERROR: Security issues found. Fix issues above."
+    exit 1
+}
+
+# Dead code detection
+echo "Running vulture dead code analysis..."
+vulture . || {
+    echo "WARNING: Potential dead code found. Review above."
+    # Note: vulture has false positives, so we warn but don't fail
+}
+
+# Run tests
+echo "Running pytest..."
+./.venv/bin/pytest tests/ -x --tb=short || {
+    echo "ERROR: Tests failed. Fix issues above."
+    exit 1
+}
+
+echo "=== PRE-PUSH PASSED ==="

@@ -1,0 +1,124 @@
+{
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Skill(python-pyproject)",
+      "Skill(library-updater)",
+      "Skill(quality-checks)",
+      "Skill(security-review)",
+      "Skill(repo-setup)",
+      "Read(./**)",
+      "Read(~/.claude/**)",
+      "Write(./**)",
+      "Edit(./**)",
+      "Update(./**)",
+      "Bash(./.venv/bin/python:*)",
+      "Bash(./.venv/bin/pip:*)",
+      "Bash(./.venv/bin/pytest:*)",
+      "Bash(gh pr create:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git show:*)",
+      "Bash(git checkout:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git config:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr edit:*)",
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(flake8:*)",
+      "Bash(black:*)",
+      "Bash(pip-audit:*)",
+      "Bash(bandit:*)",
+      "Bash(vulture:*)",
+      "Bash(~/.claude/skills/**:*)",
+      "Bash(python3:*)",
+      "Bash(which:*)",
+      "Read(./.env.example)",
+      "WebFetch(domain:openrouter.ai)",
+      "WebFetch(domain:textual.textualize.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:ai.pydantic.dev)",
+      "WebFetch(domain:stackoverflow.com)",
+      "WebFetch(domain:support.claude.com)",
+      "WebFetch(domain:blog.cloudflare.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:www.home-assistant.io)",
+      "WebFetch(domain:developers.cloudflare.com)",
+      "WebFetch(domain:modelcontextprotocol.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:developers.home-assistant.io)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./secrets/**)",
+      "Read(./config/credentials.json)",
+      "Read(./build)",
+      "Bash(./.venv/bin/black:*)",
+      "Bash(./.venv/bin/flake8:*)",
+      "Bash(./.venv/bin/bandit:*)",
+      "Bash(./.venv/bin/vulture:*)",
+      "Bash(./.venv/bin/pip-audit:*)"
+    ]
+  },
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/scripts/permission-check.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p ~/.claude/logs && jq -r '\"\\(.tool_input.command) - \\(.tool_input.description // \"No description\")\"' >> ~/.claude/logs/bash-command.log"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p ~/.claude/logs && jq -r . >> ~/.claude/logs/edited-files.log"
+          },
+          {
+            "type": "command",
+            "command": "file_path=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); if [[ \"$file_path\" == *.py ]]; then black \"$file_path\" 2>/dev/null; fi"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "notify-send 'Claude Code' 'Awaiting your input'"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash ~/.claude/scripts/statusline.sh"
+  },
+  "feedbackSurveyState": {
+    "lastShownTime": 1754086749099
+  }
+}

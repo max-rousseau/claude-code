@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+
+# Claude specific
+.claude
+shell-snapshots/
+session-env/
+statsig/
+todos/
+plans/
+plugins/
+telemetry/
+projects/
+debug/
+file-history/
+stats-cache.json
+downloads/
+plugins/
+history.jsonl
+
+# Other
+logs/
+*.log
+*-log.txt
+*.local.json
+*.zip
+*.lock
+*.bk

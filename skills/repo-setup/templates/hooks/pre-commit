@@ -1,0 +1,23 @@
+#!/bin/bash
+# Pre-commit hook: fast checks run before every commit
+# Tools read configuration from pyproject.toml
+
+set -e
+
+echo "=== PRE-COMMIT CHECKS ==="
+
+# Check formatting (fast, no changes)
+echo "Checking black formatting..."
+black --check . || {
+    echo "ERROR: Code not formatted. Run 'black .' to fix."
+    exit 1
+}
+
+# Check style violations
+echo "Checking flake8..."
+flake8 . || {
+    echo "ERROR: Style violations found. Fix issues above."
+    exit 1
+}
+
+echo "=== PRE-COMMIT PASSED ==="

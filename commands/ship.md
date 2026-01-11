@@ -76,76 +76,68 @@ Follow the merge process:
 3. Review all commits and create a professional Pull Request description
 4. Push commits to origin
 5. Create the pull request using `gh pr create`
-6. Provide the user with the pull request URI
+6. Report the pull request URI to the user
 
 **GATE CHECK**: PR must be created before proceeding.
 
 ## PHASE 6: Pipeline Monitoring & Remediation
 
-After the PR is created, monitor CI/CD pipelines until successful:
+After PR creation, monitor CI/CD pipelines by polling until all checks complete.
 
-### Step 6.1: Check for Running Pipelines
+### Step 6.1: Poll Pipeline Status
+
+Poll every 30 seconds until all checks resolve:
+
 ```bash
-gh pr checks --watch
+gh pr checks --json name,state,conclusion
 ```
 
-Or poll status with:
-```bash
-gh pr checks
-```
+**State transitions:**
+- `state: "pending"` or `"in_progress"` → `sleep 30`, poll again
+- All `conclusion: "success"` → Proceed to Phase 7
+- Any `conclusion: "failure"` → Step 6.2
 
-### Step 6.2: Wait for Pipeline Completion
-- Monitor pipeline status periodically
-- Use `gh pr checks` to view current status
-- Wait until all checks complete (success or failure)
+### Step 6.2: Handle Pipeline Failures
 
-### Step 6.3: Handle Pipeline Failures
-If any pipeline fails:
-1. Investigate the failure using `gh pr checks --json name,state,conclusion,description`
-2. View detailed logs: `gh run view <run-id> --log-failed`
-3. Identify the root cause
-4. Fix the issue in the codebase
-5. Commit the fix (use `python-git-commit` sub-agent)
-6. Push the updated code: `git push`
-7. Return to Step 6.1 and repeat until all pipelines pass
+1. Get failure details:
+   ```bash
+   gh run list --branch $(git branch --show-current) --json databaseId,conclusion --jq '.[] | select(.conclusion == "failure")'
+   gh run view <run-id> --log-failed
+   ```
+2. Fix the issue, commit (use `python-git-commit` sub-agent), and push
+3. Return to Step 6.1 (pipelines restart automatically)
 
-### Step 6.4: Confirm Success
-Once all pipelines pass:
-1. Verify with `gh pr checks` showing all green
-2. Report final status to user
-3. Note: Repository uses squash commit merges by default
-
-**GATE CHECK**: All CI/CD pipelines must pass before proceeding.
+**GATE CHECK**: All pipelines must pass before proceeding.
 
 ## PHASE 7: Post-Merge Cleanup
 
-Once the user has merged the PR, return the repository to a clean state:
+After pipelines pass, notify the user the PR is ready for merge, then poll for merge completion.
 
-### Step 7.1: Wait for User Merge
-- Inform the user that all pipelines have passed
-- Wait for the user to merge the PR (do not auto-merge)
-- Poll PR status to detect when merge occurs:
+### Step 7.1: Poll Merge Status
+
+Store the feature branch name, then poll every 30 seconds:
+
 ```bash
-gh pr view --json state,mergedAt --jq '.state + " mergedAt:" + (.mergedAt // "null")'
+FEATURE_BRANCH=$(git branch --show-current)
+gh pr view --json state,mergedAt --jq '{state: .state, merged: (.mergedAt != null)}'
 ```
 
-### Step 7.2: Return to Main Branch
+**State transitions:**
+- `state: "OPEN"` → `sleep 30`, poll again
+- `state: "MERGED"` or `merged: true` → Step 7.2
+- `state: "CLOSED"` with `merged: false` → PR closed without merge; notify user and stop
+
+### Step 7.2: Cleanup
+
 Once merged:
-1. Fetch latest changes: `git fetch origin`
-2. Checkout main branch: `git checkout main`
-3. Pull latest: `git pull origin main`
+```bash
+git fetch origin && git checkout main && git pull origin main
+git branch -d $FEATURE_BRANCH
+```
 
-### Step 7.3: Cleanup Feature Branch
-1. Identify the feature branch that was just merged
-2. Delete the local feature branch: `git branch -d <branch-name>`
-3. Verify cleanup: `git branch` (should only show main)
+Confirm repository is on main and working directory is clean.
 
-### Step 7.4: Final Confirmation
-1. Confirm repository is on main branch
-2. Confirm working directory is clean
-3. Report to user: repository is current and ready for new work
-
-**SHIP COMPLETE**: Repository is clean and ready for the next feature.
+**SHIP COMPLETE**: Repository is ready for the next feature.
 
 ## GH CLI REFERENCE
 
@@ -165,7 +157,11 @@ gh pr view <PR_NUMBER> --json state,mergedAt --jq '.state + " mergedAt:" + (.mer
 ## EXECUTION NOTES
 
 - Each phase is a hard gate - do not proceed if issues remain
-- If a phase fails repeatedly, stop and ask the user for guidance
+- If a phase fails repeatedly (3+ attempts), ask the user for guidance
 - Use the TodoWrite tool to track progress through each phase
 - Report status after each phase completion
-- This process may take several iterations - that is expected
+
+### Polling Behavior
+- Phases 6 and 7 use polling loops - continue through them without waiting for user input
+- Polling interval: 30 seconds
+- Timeout: 60 polls (30 minutes) - if reached, ask user for guidance

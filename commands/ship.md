@@ -12,9 +12,11 @@ description: Full pre-deployment pipeline - security, quality, tests, docs, comm
 
 You are orchestrating the complete ship process. This is a sequential pipeline where each phase must complete successfully before proceeding to the next.
 
+This pipeline runs autonomously. Do not stop for user confirmation between phases - proceed automatically when each phase passes. See "Execution Notes" at the end for when to stop.
+
 ## PHASE 1: Code Quality Gates
 
-Execute these skills IN ORDER. After each skill completes, resolve ALL issues before proceeding to the next. Do not skip or defer issues.
+Execute these skills in order. After each skill completes successfully, proceed to the next. If issues are found, fix them and re-run until clean, then continue. Do not skip or defer issues.
 
 ### Step 1.1: Pyproject Validation
 Invoke the `python-pyproject` skill FIRST.
@@ -156,12 +158,23 @@ gh pr view <PR_NUMBER> --json state,mergedAt --jq '.state + " mergedAt:" + (.mer
 
 ## EXECUTION NOTES
 
-- Each phase is a hard gate - do not proceed if issues remain
+### Autonomous Flow
+- Run all phases continuously without stopping for confirmation between them
+- When a phase passes, proceed to the next immediately
+- After fixing issues, re-run the check and continue without waiting for acknowledgment
+
+### Gate Behavior
+- Each phase is a hard gate - do not proceed if issues remain unresolved
 - If a phase fails repeatedly (3+ attempts), ask the user for guidance
 - Use the TodoWrite tool to track progress through each phase
-- Report status after each phase completion
 
 ### Polling Behavior
 - Phases 6 and 7 use polling loops - continue through them without waiting for user input
 - Polling interval: 30 seconds
 - Timeout: 60 polls (30 minutes) - if reached, ask user for guidance
+
+### When to Stop
+Only stop for user input when:
+- A phase has failed 3+ consecutive attempts
+- PR is created and waiting for user to merge (Phase 7)
+- Pipeline timeout reached

@@ -1,0 +1,11 @@
+{
+  "name": "maxkits",
+  "description": "Personal language-specific development toolkits",
+  "owner": { "name": "maxrousseau" },
+  "plugins": [
+    { "name": "python-toolkit", "description": "Python dev tools (black, flake8, pytest, bandit)", "source": "./plugins/python-toolkit" },
+    { "name": "go-toolkit", "description": "Go dev tools (go vet, staticcheck, gosec)", "source": "./plugins/go-toolkit" },
+    { "name": "typescript-toolkit", "description": "TypeScript dev tools (eslint, prettier)", "source": "./plugins/typescript-toolkit" },
+    { "name": "terraform-toolkit", "description": "Terraform dev tools (tflint, tfsec)", "source": "./plugins/terraform-toolkit" }
+  ]
+}

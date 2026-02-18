@@ -1,0 +1,19 @@
+{
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "/Users/maxrousseau/.claude/plugins/marketplaces/claude-plugins-official",
+    "lastUpdated": "2026-02-18T03:43:32.517Z"
+  },
+  "maxkits": {
+    "source": {
+      "source": "url",
+      "url": "file:///Users/maxrousseau/.claude/plugins/marketplaces/maxkits"
+    },
+    "installLocation": "/Users/maxrousseau/.claude/plugins/marketplaces/maxkits",
+    "lastUpdated": "2026-02-14T00:00:00.000Z",
+    "autoUpdate": true
+  }
+}

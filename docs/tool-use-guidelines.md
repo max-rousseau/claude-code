@@ -20,6 +20,19 @@ Use `Bash` EXCLUSIVELY for operations with no built-in equivalent:
 - Git operations (git add, commit, push, etc.)
 - Other system commands without built-in alternatives
 
+## NEVER use `cd` in Bash commands
+
+**NEVER** prefix Bash commands with `cd /path && ...`. Instead, use absolute paths directly:
+
+| BAD | GOOD |
+|-----|------|
+| `cd /project && .venv/bin/pytest tests/` | `.venv/bin/pytest /project/tests/` |
+| `cd /project && git status` | `git -C /project status` |
+| `cd /project && ./script.sh` | `/project/script.sh` |
+| `cd /project && ls src/` | `ls /project/src/` |
+
+For tools that don't support absolute paths natively, pass the directory as an argument or environment variable rather than using `cd`.
+
 ## Rationale
 
 Built-in tools provide:

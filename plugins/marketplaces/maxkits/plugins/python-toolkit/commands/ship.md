@@ -1,5 +1,5 @@
 ---
-description: Full pre-deployment pipeline - security, quality, tests, commit, PR creation, CI/CD pipeline monitoring, and post-merge cleanup.
+description: Full pre-deployment pipeline - security, quality, tests, docs, commit, PR creation, CI/CD pipeline monitoring, and post-merge cleanup.
 ---
 
 # CONTEXT
@@ -14,52 +14,65 @@ You are orchestrating the complete ship process. This is a sequential pipeline w
 
 This pipeline runs autonomously. Do not stop for user confirmation between phases - proceed automatically when each phase passes. See "Execution Notes" at the end for when to stop.
 
-## PHASE 0: Detect Project Language
-
-Detect the project type by checking for indicator files:
-- `pyproject.toml` or `*.py` → Python project
-- `go.mod` or `*.go` → Go project
-- `package.json` or `tsconfig.json` → TypeScript project
-- `*.tf` or `.terraform/` → Terraform project
-
-Use the detected language to select the appropriate plugin skills and agents for the phases below.
-
 ## PHASE 1: Code Quality Gates
 
-Execute the active plugin's skills in order. If issues are found, fix them and re-run until clean, then continue.
+Execute these skills in order. After each skill completes successfully, proceed to the next. If issues are found, fix them and re-run until clean, then continue. Do not skip or defer issues.
 
-### Step 1.1: Security Assessment
+### Step 1.1: Pyproject Validation
+Invoke the `python-pyproject` skill FIRST.
+- Validate pyproject.toml structure
+- Ensure all tool configurations are correct ([tool.black], [tool.flake8], etc.)
+- Verify dependencies are properly specified
+- Quality tools depend on this configuration being correct
+
+### Step 1.2: Security Assessment
 Invoke the `security-review` skill.
 - If vulnerabilities are found, FIX THEM before proceeding
 - Re-run security review until clean
 
-### Step 1.2: Quality Checks
+### Step 1.3: Quality Checks
 Invoke the `quality-checks` skill.
-- If issues are found, FIX THEM before proceeding
+- If issues are found (black formatting, flake8 errors, dead code), FIX THEM before proceeding
 - Re-run quality checks until clean
+
+### Step 1.4: Library Updates
+Invoke the `library-updater` skill.
+- If updates are available, apply them
+- Ensure dependencies install cleanly
 
 **GATE CHECK**: All Phase 1 steps must pass cleanly before proceeding.
 
 ## PHASE 2: Testing
 
-Run tests appropriate to the project language:
-- **Python**: Launch the `python-pytest-agent` sub-agent
-- **Go**: Run `go test ./... -v -race`
-- **TypeScript**: Run `npm test`
-- **Terraform**: Run `terraform validate` and `terraform plan`
+Launch the `python-pytest-agent` sub-agent to:
+- Run all tests
+- Ensure coverage is adequate
+- Fix any failing tests
+- Address test quality issues
 
 **GATE CHECK**: All tests must pass before proceeding.
 
-## PHASE 3: Git Commit
+## PHASE 3: Documentation
 
+Launch the `python-docs-generator` sub-agent to:
+- Update/generate docstrings
+- Ensure file headers are present
+- Update README if needed
+
+**GATE CHECK**: Documentation must be complete before proceeding.
+
+## PHASE 4: Git Commit
+
+Launch the `python-git-commit` sub-agent to:
 - Review all changes made during this pipeline
 - Create thoughtful, professional commit(s)
-- Follow conventional commit format
+- Ensure version bump in pyproject.toml is appropriate
 
 **GATE CHECK**: All changes must be committed before proceeding.
 
-## PHASE 4: Pull Request Creation
+## PHASE 5: Pull Request Creation
 
+Follow the merge process:
 1. Ensure we are on a non-protected branch (not main/master). If on a protected branch, create a new feature/bugfix/refactor branch as appropriate.
 2. Ensure the local branch is clean (all code committed)
 3. Review all commits and create a professional Pull Request description
@@ -69,11 +82,11 @@ Run tests appropriate to the project language:
 
 **GATE CHECK**: PR must be created before proceeding.
 
-## PHASE 5: Pipeline Monitoring & Remediation
+## PHASE 6: Pipeline Monitoring & Remediation
 
 After PR creation, monitor CI/CD pipelines by polling until all checks complete.
 
-### Step 5.1: Poll Pipeline Status
+### Step 6.1: Poll Pipeline Status
 
 Poll every 30 seconds until all checks resolve:
 
@@ -83,26 +96,26 @@ gh pr checks --json name,state,conclusion
 
 **State transitions:**
 - `state: "pending"` or `"in_progress"` → `sleep 30`, poll again
-- All `conclusion: "success"` → Proceed to Phase 6
-- Any `conclusion: "failure"` → Step 5.2
+- All `conclusion: "success"` → Proceed to Phase 7
+- Any `conclusion: "failure"` → Step 6.2
 
-### Step 5.2: Handle Pipeline Failures
+### Step 6.2: Handle Pipeline Failures
 
 1. Get failure details:
    ```bash
    gh run list --branch $(git branch --show-current) --json databaseId,conclusion --jq '.[] | select(.conclusion == "failure")'
    gh run view <run-id> --log-failed
    ```
-2. Fix the issue, commit, and push
-3. Return to Step 5.1 (pipelines restart automatically)
+2. Fix the issue, commit (use `python-git-commit` sub-agent), and push
+3. Return to Step 6.1 (pipelines restart automatically)
 
 **GATE CHECK**: All pipelines must pass before proceeding.
 
-## PHASE 6: Post-Merge Cleanup
+## PHASE 7: Post-Merge Cleanup
 
 After pipelines pass, notify the user the PR is ready for merge, then poll for merge completion.
 
-### Step 6.1: Poll Merge Status
+### Step 7.1: Poll Merge Status
 
 Store the feature branch name, then poll every 30 seconds:
 
@@ -113,10 +126,10 @@ gh pr view --json state,mergedAt --jq '{state: .state, merged: (.mergedAt != nul
 
 **State transitions:**
 - `state: "OPEN"` → `sleep 30`, poll again
-- `state: "MERGED"` or `merged: true` → Step 6.2
+- `state: "MERGED"` or `merged: true` → Step 7.2
 - `state: "CLOSED"` with `merged: false` → PR closed without merge; notify user and stop
 
-### Step 6.2: Cleanup
+### Step 7.2: Cleanup
 
 Once merged:
 ```bash
@@ -156,12 +169,12 @@ gh pr view <PR_NUMBER> --json state,mergedAt --jq '.state + " mergedAt:" + (.mer
 - Use the TodoWrite tool to track progress through each phase
 
 ### Polling Behavior
-- Phases 5 and 6 use polling loops - continue through them without waiting for user input
+- Phases 6 and 7 use polling loops - continue through them without waiting for user input
 - Polling interval: 30 seconds
 - Timeout: 60 polls (30 minutes) - if reached, ask user for guidance
 
 ### When to Stop
 Only stop for user input when:
 - A phase has failed 3+ consecutive attempts
-- PR is created and waiting for user to merge (Phase 6)
+- PR is created and waiting for user to merge (Phase 7)
 - Pipeline timeout reached

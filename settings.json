@@ -2,41 +2,46 @@
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
-      "Skill(python-pyproject)",
-      "Skill(library-updater)",
+      "Skill(commit)",
+      "Skill(merge)",
+      "Skill(main)",
+      "Skill(quality)",
+      "Skill(ship)",
       "Skill(quality-checks)",
       "Skill(security-review)",
       "Skill(repo-setup)",
-      "Read(./**)",
+      "Skill(python-pyproject)",
+      "Skill(library-updater)",
       "Read(~/.claude/**)",
+      "Read(./**)",
       "Write(./**)",
       "Edit(./**)",
       "Update(./**)",
-      "Bash(./.venv/bin/python:*)",
-      "Bash(./.venv/bin/pip:*)",
-      "Bash(./.venv/bin/pytest:*)",
       "Bash(gh pr create:*)",
       "Bash(git add:*)",
+      "Bash(git branch:*)",
       "Bash(git commit:*)",
+      "Bash(git diff:*)",
+      "Bash(git fetch:*)",
+      "Bash(git log:*)",
+      "Bash(git merge:*)",
+      "Bash(git rebase:*)",
+      "Bash(git remote add:*)",
+      "Bash(git reset:*)",
       "Bash(git show:*)",
       "Bash(git checkout:*)",
-      "Bash(git remote add:*)",
+      "Bash(git stash:*)",
+      "Bash(git status:*)",
+      "Bash(git tag:*)",
       "Bash(git push:*)",
       "Bash(git pull:*)",
       "Bash(git config:*)",
-      "Bash(gh pr create:*)",
       "Bash(gh pr view:*)",
       "Bash(gh pr edit:*)",
       "Bash(mkdir:*)",
       "Bash(ls:*)",
-      "Bash(flake8:*)",
-      "Bash(black:*)",
-      "Bash(pip-audit:*)",
-      "Bash(bandit:*)",
-      "Bash(vulture:*)",
-      "Bash(~/.claude/skills/:*)",
-      "Bash(python3:*)",
       "Bash(which:*)",
+      "Bash(~/.claude/plugins/**:*)",
       "Read(./.env.example)",
       "WebFetch(domain:openrouter.ai)",
       "WebFetch(domain:textual.textualize.io)",
@@ -49,20 +54,25 @@
       "WebFetch(domain:www.home-assistant.io)",
       "WebFetch(domain:developers.cloudflare.com)",
       "WebFetch(domain:modelcontextprotocol.io)",
-      "WebFetch(domain:github.com)",
       "WebFetch(domain:docs.anthropic.com)",
-      "WebFetch(domain:developers.home-assistant.io)"
+      "WebFetch(domain:developers.home-assistant.io)",
+      "WebFetch(domain:pypi.org)",
+      "WebSearch"
     ],
     "deny": [
       "Read(./.env)",
+      "Read(~/.zshrc)",
+      "Read(~/.zshrc**)",
       "Read(./secrets/**)",
       "Read(./config/credentials.json)",
-      "Read(./build)",
-      "Bash(./.venv/bin/black:*)",
-      "Bash(./.venv/bin/flake8:*)",
-      "Bash(./.venv/bin/bandit:*)",
-      "Bash(./.venv/bin/vulture:*)",
-      "Bash(./.venv/bin/pip-audit:*)"
+      "Read(~/.ssh/id_*)",
+      "Read(~/.ssh/config)",
+      "Read(~/.aws/**)",
+      "Read(~/.gnupg/**)",
+      "Read(~/.kube/**)",
+      "Read(~/.config/gcloud/**)",
+      "Read(**/.env)",
+      "Read(./build)"
     ]
   },
   "hooks": {
@@ -95,10 +105,6 @@
           {
             "type": "command",
             "command": "mkdir -p ~/.claude/logs && jq -r . >> ~/.claude/logs/edited-files.log"
-          },
-          {
-            "type": "command",
-            "command": "file_path=$(jq -r '.tool_input.file_path // empty' 2>/dev/null); if [[ \"$file_path\" == *.py ]]; then black \"$file_path\" 2>/dev/null; fi"
           }
         ]
       }
@@ -114,9 +120,31 @@
       }
     ]
   },
+  "enabledPlugins": {
+    "maxkits/python-toolkit": true,
+    "maxkits/go-toolkit": true,
+    "maxkits/typescript-toolkit": true,
+    "maxkits/terraform-toolkit": true
+  },
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/scripts/statusline.sh"
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": true,
+    "excludedCommands": ["git", "gh"],
+    "network": {
+      "allowLocalBinding": true,
+      "allowUnixSockets": [
+        "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+      ],
+      "allowedDomains": [
+        "api.github.com",
+        "github.com"
+      ]
+    }
   },
   "feedbackSurveyState": {
     "lastShownTime": 1754086749099

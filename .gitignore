@@ -4,18 +4,24 @@
 # Claude specific
 .claude
 shell-snapshots/
+cache/
+paste-cache/
+tasks/
 session-env/
 statsig/
 todos/
 plans/
-plugins/
+plugins/*
+!plugins/marketplaces/
+!plugins/known_marketplaces.json
+plugins/marketplaces/*
+!plugins/marketplaces/maxkits/
 telemetry/
 projects/
 debug/
 file-history/
 stats-cache.json
 downloads/
-plugins/
 history.jsonl
 
 # Other

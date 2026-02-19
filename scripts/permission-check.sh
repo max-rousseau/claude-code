@@ -22,5 +22,11 @@ if echo "$command" | grep -qE '\.venv/bin/python.*-c '; then
     exit 0
 fi
 
+# Check for git -C usage
+if echo "$command" | grep -qE '^git\s+-C\s'; then
+    echo '{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny","message":"HERESY DETECTED: Do not use git -C. Use plain git commands; the working directory is already the project root. See tool-use-guidelines.md.","interrupt":true}}}'
+    exit 0
+fi
+
 # No match - allow normal processing
 exit 0

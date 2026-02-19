@@ -61,7 +61,8 @@
       "WebFetch(domain:docs.anthropic.com)",
       "WebFetch(domain:developers.home-assistant.io)",
       "WebFetch(domain:pypi.org)",
-      "WebSearch"
+      "WebSearch",
+      "mcp__forgejo__create_pull_request"
     ],
     "deny": [
       "Read(./.env)",
@@ -76,6 +77,7 @@
       "Read(~/.kube/**)",
       "Read(~/.config/gcloud/**)",
       "Read(**/.env)",
+      "Read(**/stack.env)",
       "Read(**/.mcp.json)",
       "Edit(**/.mcp.json)",
       "Read(./build)"
@@ -140,7 +142,7 @@
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
     "allowUnsandboxedCommands": true,
-    "excludedCommands": ["git", "gh"],
+    "excludedCommands": ["git:*", "gh:*"],
     "network": {
       "allowLocalBinding": true,
       "allowUnixSockets": [

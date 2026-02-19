@@ -27,11 +27,12 @@ Use `Bash` EXCLUSIVELY for operations with no built-in equivalent:
 | BAD | GOOD |
 |-----|------|
 | `cd /project && .venv/bin/pytest tests/` | `.venv/bin/pytest /project/tests/` |
-| `cd /project && git status` | `git -C /project status` |
 | `cd /project && ./script.sh` | `/project/script.sh` |
 | `cd /project && ls src/` | `ls /project/src/` |
 
 For tools that don't support absolute paths natively, pass the directory as an argument or environment variable rather than using `cd`.
+
+**Exception — git and gh**: Do NOT use `git -C /path`. Use plain `git` commands directly; the working directory is already the project root.
 
 ## Rationale
 

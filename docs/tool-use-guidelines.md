@@ -34,6 +34,17 @@ For tools that don't support absolute paths natively, pass the directory as an a
 
 **Exception — git and gh**: Do NOT use `git -C /path`. Use plain `git` commands directly; the working directory is already the project root.
 
+## NEVER chain commands
+
+**NEVER** use `&&` or `;` to chain multiple commands in a single Bash call. Make separate tool calls instead.
+
+| BAD | GOOD |
+|-----|------|
+| `git add . && git commit -m "msg"` | Two separate Bash tool calls |
+| `mkdir -p foo ; cp file foo/` | Two separate Bash tool calls |
+
+Pipes (`|`) and redirects (`>`) are allowed — they compose a single operation, not chain separate ones.
+
 ## Rationale
 
 Built-in tools provide:

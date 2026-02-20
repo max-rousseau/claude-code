@@ -62,7 +62,9 @@
       "WebFetch(domain:developers.home-assistant.io)",
       "WebFetch(domain:pypi.org)",
       "WebSearch",
-      "mcp__forgejo__create_pull_request"
+      "mcp__forgejo__create_pull_request",
+      "mcp__forgejo__get_pull_request",
+      "mcp__forgejo__list_pull_requests"
     ],
     "deny": [
       "Read(./.env)",

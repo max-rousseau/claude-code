@@ -22,6 +22,12 @@ if echo "$command" | grep -qE '\.venv/bin/python.*-c '; then
     exit 0
 fi
 
+# Check for command chaining with && or ;
+if echo "$command" | grep -qE '&&|;\s'; then
+    echo '{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny","message":"HERESY DETECTED: Do not chain commands with && or ;. Make separate tool calls instead. Pipes (|) and redirects (>) are fine.","interrupt":true}}}'
+    exit 0
+fi
+
 # Check for git -C usage
 if echo "$command" | grep -qE '^git\s+-C\s'; then
     echo '{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"deny","message":"HERESY DETECTED: Do not use git -C. Use plain git commands; the working directory is already the project root. See tool-use-guidelines.md.","interrupt":true}}}'
